@@ -1,4 +1,3 @@
-
 pub use ndarray::{arr1, Array1, Array2, Zip};
 pub use ndarray_npy::read_npy;
 
@@ -29,39 +28,62 @@ fn load_val_data() -> (Array2<f32>, Array1<i64>) {
 }
 
 pub fn load_data() -> (
-    (Array2<f32>, Array2<f32>),
-    (Array2<f32>, Array1<i64>),
-    (Array2<f32>, Array1<i64>),
+    (Vec<Array1<f32>>, Vec<Array1<f32>>),
+    (Vec<Array1<f32>>, Vec<f32>),
+    (Vec<Array1<f32>>, Vec<f32>),
 ) {
+    println!("Starting loading data...");
     let train_data = load_train_data();
-    let test_data = load_train_data();
+    let test_data = load_test_data();
     let val_data = load_val_data();
+    println!("Data loading complete...");
+    println!("Starting Data shaping...");
 
     let tr_img_reshape = train_data.0.reversed_axes();
+    let mut tr_ret: Vec<Array1<f32>> = Vec::with_capacity(tr_img_reshape.shape()[1]);
+
+    for ip in tr_img_reshape.gencolumns() {
+        tr_ret.push(ip.to_owned());
+    }
+
     let tr_res = vectorise_results(&train_data.1);
+
     let val_img_reshape = val_data.0.reversed_axes();
+    let mut val_ret: Vec<Array1<f32>> = Vec::with_capacity(val_img_reshape.shape()[1]);
+    for ip in val_img_reshape.gencolumns() {
+        val_ret.push(ip.to_owned());
+    }
+
     let test_img_reshape = test_data.0.reversed_axes();
+    let mut test_ret: Vec<Array1<f32>> = Vec::with_capacity(test_img_reshape.shape()[1]);
+    for ip in test_img_reshape.gencolumns() {
+        test_ret.push(ip.to_owned());
+    }
+
+    println!("Data shaping complete...");
     return (
-        (tr_img_reshape, tr_res),
-        (val_img_reshape, val_data.1),
-        (test_img_reshape, test_data.1),
+        (tr_ret, tr_res),
+        (val_ret, split_res(val_data.1.reversed_axes())),
+        (test_ret, split_res(test_data.1.reversed_axes())),
     );
 }
 
-fn vectorise_results(res: &Array1<i64>) -> Array2<f32> {
-    let mut ret = Array2::<f32>::zeros([10, res.shape()[0]]);
-    Zip::from(ret.gencolumns_mut())
+fn vectorise_results(res: &Array1<i64>) -> Vec<Array1<f32>> {
+    let mut temp = Array2::<f32>::zeros([10, res.shape()[0]]);
+    Zip::from(temp.gencolumns_mut())
         .and(res)
         .apply(|mut col, &idx| col[idx as usize] = 1.0);
+    let mut ret = Vec::with_capacity(temp.shape()[1]);
+    for ip in temp.gencolumns() {
+        ret.push(ip.to_owned());
+    }
     ret
 }
 
-#[test]
-fn test_vec_res() {
-    let arr: Array1<i64> = arr1(&[1, 2, 3]);
-    let vec_res = vectorise_results(&arr);
-    assert_eq!(vec_res.shape(), &[10, 3]);
-    assert_eq!(vec_res[[1, 0]], 1.0);
-    assert_eq!(vec_res[[2, 1]], 1.0);
-    assert_eq!(vec_res[[3, 2]], 1.0);
+fn split_res(input: Array1<i64>) -> Vec<f32> {
+    let mut ret = Vec::with_capacity(input.shape()[0]);
+    for col in input.gencolumns() {
+        ret.push(col[0] as f32);
+    }
+    ret
 }
