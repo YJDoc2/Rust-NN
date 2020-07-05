@@ -102,9 +102,10 @@ impl Network {
 
     fn evaluate(&self, test_data: &Vec<(Array1<f32>, f32)>) -> i32 {
         let mut ret = Vec::<(f32, f32)>::with_capacity(test_data.len());
-        test_data
-            .iter()
-            .for_each(|(x, y)| ret.push((max(&self.feedforward(x)), *y)));
+        test_data.iter().for_each(|(x, y)| {
+            let out = max(&self.feedforward(x));
+            ret.push((out, *y))
+        });
 
         ret.into_iter().fold(0, |mut sum, (x, y)| {
             if x - y < 0.001 {
@@ -195,10 +196,12 @@ fn matrix_from_vecs(v1: Array1<f32>, v2: Array1<f32>) -> Array2<f32> {
 
 fn max(input: &Array1<f32>) -> f32 {
     let mut max = std::f32::MIN;
-    for i in input {
+    let mut ret_idx = 0.0;
+    for (idx, i) in input.iter().enumerate() {
         if *i > max {
             max = *i;
+            ret_idx = idx as f32;
         }
     }
-    max
+    ret_idx
 }
