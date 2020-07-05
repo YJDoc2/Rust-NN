@@ -2,7 +2,7 @@
 mod NN;
 mod util;
 
-use ndarray::Array1;
+use ndarray::{Array1, Array2};
 use NN::c1::Network;
 fn main() {
     // load all the data

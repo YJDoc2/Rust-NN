@@ -1,5 +1,5 @@
-use ndarray::{linalg::general_mat_mul, Array1, Array2};
-use ndarray_rand::{rand_distr::Normal, RandomExt};
+use ndarray::{Array1, Array2};
+use ndarray_rand::{rand_distr::StandardNormal, RandomExt};
 
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -16,14 +16,12 @@ impl Network {
         let bises: Vec<_> = sizes
             .iter()
             .skip(1)
-            .map(|y: &i32| Array1::random(*y as usize, Normal::new(0.0, 1.0).unwrap()))
+            .map(|y: &i32| Array1::random(*y as usize, StandardNormal))
             .collect();
         let weights: Vec<_> = sizes
             .iter()
             .zip(sizes.iter().skip(1))
-            .map(|(x, y): (&i32, &i32)| {
-                Array2::random((*y as usize, *x as usize), Normal::new(0.0, 1.0).unwrap())
-            })
+            .map(|(x, y): (&i32, &i32)| Array2::random((*y as usize, *x as usize), StandardNormal))
             .collect();
         Network {
             num_layers: sizes.len(),
@@ -56,7 +54,7 @@ impl Network {
             training_data.shuffle(&mut thread_rng());
 
             let mini_batches = training_data.chunks(mini_batch_size);
-            for (i, mini_batch) in mini_batches.enumerate() {
+            for mini_batch in mini_batches {
                 self.update_mini_batch(mini_batch, eta);
             }
             match test_data {
@@ -80,24 +78,30 @@ impl Network {
             .collect();
         for (x, y) in mini_batch {
             let (del_nab_b, del_nab_w) = self.backprop(x, y);
-            nabla_b
-                .iter_mut()
+            nabla_b = nabla_b
+                .iter()
                 .zip(del_nab_b.iter())
-                .for_each(|(nb, dnb)| *nb = nb.clone() + dnb.clone());
-            nabla_w
-                .iter_mut()
+                .map(|(nb, dnb)| nb + dnb)
+                .collect();
+            nabla_w = nabla_w
+                .iter()
                 .zip(del_nab_w.iter())
-                .for_each(|(nw, dnw)| *nw = nw.clone() + dnw.clone())
+                .map(|(nw, dnw)| nw + dnw)
+                .collect();
         }
         let batch_len = mini_batch.len();
-        self.weights
-            .iter_mut()
-            .zip(nabla_w.iter())
-            .for_each(|(w, nw)| *w = w.clone() - (eta / batch_len as f32) * nw);
-        self.bises
-            .iter_mut()
-            .zip(nabla_b.iter())
-            .for_each(|(b, nb)| *b = b.clone() - (eta / batch_len as f32) * nb);
+        self.weights = self
+            .weights
+            .iter()
+            .zip(nabla_w.into_iter())
+            .map(|(w, nw)| w.clone() - (eta) * nw)
+            .collect();
+        self.bises = self
+            .bises
+            .iter()
+            .zip(nabla_b.into_iter())
+            .map(|(b, nb)| b.clone() - (eta) * nb)
+            .collect();
     }
 
     fn evaluate(&self, test_data: &Vec<(Array1<f32>, f32)>) -> i32 {
@@ -108,7 +112,7 @@ impl Network {
         });
 
         ret.into_iter().fold(0, |mut sum, (x, y)| {
-            if x - y < 0.001 {
+            if x - y < 0.1 {
                 sum += 1;
             }
             sum
@@ -135,7 +139,6 @@ impl Network {
             activation = sigmoid(z);
             activations.push(activation.clone());
         }
-        let a_len = activations.len();
 
         let a_in = activations.pop().unwrap().clone();
         let z_in = zs.pop().unwrap();
