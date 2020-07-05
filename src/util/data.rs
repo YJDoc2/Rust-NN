@@ -53,19 +53,17 @@ pub fn load_data() -> (
     for ip in val_img_reshape.gencolumns() {
         val_ret.push(ip.to_owned());
     }
+    let val_res = split_res(val_data.1.reversed_axes());
 
     let test_img_reshape = test_data.0.reversed_axes();
     let mut test_ret: Vec<Array1<f32>> = Vec::with_capacity(test_img_reshape.shape()[1]);
     for ip in test_img_reshape.gencolumns() {
         test_ret.push(ip.to_owned());
     }
+    let test_res = split_res(test_data.1);
 
     println!("Data shaping complete...");
-    return (
-        (tr_ret, tr_res),
-        (val_ret, split_res(val_data.1.reversed_axes())),
-        (test_ret, split_res(test_data.1.reversed_axes())),
-    );
+    return ((tr_ret, tr_res), (val_ret, val_res), (test_ret, test_res));
 }
 
 fn vectorise_results(res: &Array1<i64>) -> Vec<Array1<f32>> {
@@ -82,8 +80,8 @@ fn vectorise_results(res: &Array1<i64>) -> Vec<Array1<f32>> {
 
 fn split_res(input: Array1<i64>) -> Vec<f32> {
     let mut ret = Vec::with_capacity(input.shape()[0]);
-    for col in input.gencolumns() {
-        ret.push(col[0] as f32);
+    for col in input.iter() {
+        ret.push(*col as f32);
     }
     ret
 }

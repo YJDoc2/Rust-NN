@@ -14,6 +14,5 @@ fn main() {
 
     let test_data: Vec<(Array1<f32>, f32)> =
         ts_data.into_iter().zip(test_res.into_iter()).collect();
-
     net.SGD(training_data, 30, 10, 3.0, Some(&test_data));
 }

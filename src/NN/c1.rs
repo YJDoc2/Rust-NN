@@ -20,7 +20,6 @@ impl Network {
             .collect();
         let weights: Vec<_> = sizes
             .iter()
-            .rev()
             .zip(sizes.iter().skip(1))
             .map(|(x, y): (&i32, &i32)| {
                 Array2::random((*y as usize, *x as usize), Normal::new(0.0, 1.0).unwrap())
@@ -52,12 +51,12 @@ impl Network {
         eta: f32,
         test_data: Option<&Vec<(Array1<f32>, f32)>>,
     ) {
-        let n = training_data.len();
+        println!("Starting training...");
         for j in 0..epochs {
             training_data.shuffle(&mut thread_rng());
 
             let mini_batches = training_data.chunks(mini_batch_size);
-            for mini_batch in mini_batches {
+            for (i, mini_batch) in mini_batches.enumerate() {
                 self.update_mini_batch(mini_batch, eta);
             }
             match test_data {
@@ -65,6 +64,7 @@ impl Network {
                 None => println!("Epoch {} completed", j),
             }
         }
+        println!("Completed training...");
     }
 
     fn update_mini_batch(&mut self, mini_batch: &[(Array1<f32>, Array1<f32>)], eta: f32) {
@@ -107,7 +107,7 @@ impl Network {
             .for_each(|(x, y)| ret.push((max(&self.feedforward(x)), *y)));
 
         ret.into_iter().fold(0, |mut sum, (x, y)| {
-            if x == y {
+            if x - y < 0.001 {
                 sum += 1;
             }
             sum
@@ -124,22 +124,24 @@ impl Network {
 
         let mut activation = x.clone();
         let mut activations: Vec<Array1<f32>> = Vec::with_capacity(self.num_layers);
+        activations.push(x.clone());
         let mut zs: Vec<Array1<f32>> = Vec::with_capacity(self.num_layers);
 
         for (b, w) in self.bises.iter().zip(self.weights.iter()) {
-            let z = w.dot(&activation) + b;
+            let temp = w.clone().dot(&activation);
+            let z = temp + b;
             zs.push(z.clone());
             activation = sigmoid(z);
             activations.push(activation.clone());
         }
         let a_len = activations.len();
 
-        let a_in = activations.pop().unwrap();
+        let a_in = activations.pop().unwrap().clone();
         let z_in = zs.pop().unwrap();
         let mut delta = const_derivative(a_in, y.clone()) * sigmoid_prime(z_in).reversed_axes();
 
         rev_nabla_b.push(delta.clone());
-        let temp = activations.pop().unwrap().reversed_axes();
+        let temp = activations.pop().unwrap().clone().reversed_axes();
         rev_nabla_w.push(matrix_from_vecs(delta.clone(), temp));
         let w_len = self.weights.len();
 
@@ -152,10 +154,11 @@ impl Network {
                 .dot(&delta)
                 * sp;
             rev_nabla_b.push(delta.clone());
-            rev_nabla_w.push(matrix_from_vecs(
+            let m = matrix_from_vecs(
                 delta.clone(),
-                activations[a_len - l - 1].clone().reversed_axes(),
-            ));
+                activations.pop().unwrap().clone().reversed_axes(),
+            );
+            rev_nabla_w.push(m);
         }
 
         (
@@ -181,12 +184,9 @@ fn sigmoid_prime(x: Array1<f32>) -> Array1<f32> {
 fn matrix_from_vecs(v1: Array1<f32>, v2: Array1<f32>) -> Array2<f32> {
     let v1_shape = v1.shape();
     let v2_shape = v2.shape();
-    assert_eq!(v1_shape[1], 1);
-    assert_eq!(v2_shape[0], 1);
-    assert_eq!(v1_shape[0], v2_shape[1]);
     let mut ret = Array2::<f32>::zeros((v1_shape[0], v2_shape[0]));
     for i in 0..v1_shape[0] {
-        for j in 0..v2_shape[1] {
+        for j in 0..v2_shape[0] {
             ret[[i, j]] = v1[i] * v2[j];
         }
     }
