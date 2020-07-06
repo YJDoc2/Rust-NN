@@ -89,7 +89,7 @@ impl Network {
                 .map(|(nw, dnw)| nw + dnw)
                 .collect();
         }
-        let batch_len = mini_batch.len();
+        let batch_len = mini_batch.len() as f32;
         self.weights = self
             .weights
             .iter()
@@ -112,7 +112,7 @@ impl Network {
         });
 
         ret.into_iter().fold(0, |mut sum, (x, y)| {
-            if x - y < 0.1 {
+            if (x - y).abs() < 0.1 {
                 sum += 1;
             }
             sum
@@ -139,11 +139,9 @@ impl Network {
             activation = sigmoid(z);
             activations.push(activation.clone());
         }
-
         let a_in = activations.pop().unwrap().clone();
         let z_in = zs.pop().unwrap();
         let mut delta = const_derivative(a_in, y.clone()) * sigmoid_prime(z_in).reversed_axes();
-
         rev_nabla_b.push(delta.clone());
         let temp = activations.pop().unwrap().clone().reversed_axes();
         rev_nabla_w.push(matrix_from_vecs(delta.clone(), temp));
@@ -158,10 +156,8 @@ impl Network {
                 .dot(&delta)
                 * sp;
             rev_nabla_b.push(delta.clone());
-            let m = matrix_from_vecs(
-                delta.clone(),
-                activations.pop().unwrap().clone().reversed_axes(),
-            );
+            let temp = activations.pop().unwrap().clone().reversed_axes();
+            let m = matrix_from_vecs(delta.clone(), temp);
             rev_nabla_w.push(m);
         }
 
