@@ -94,29 +94,14 @@ impl Network {
             .weights
             .iter()
             .zip(nabla_w.into_iter())
-            .map(|(w, nw)| w.clone() - (eta) * nw)
+            .map(|(w, nw)| w.clone() - (eta / batch_len) * nw)
             .collect();
         self.bises = self
             .bises
             .iter()
             .zip(nabla_b.into_iter())
-            .map(|(b, nb)| b.clone() - (eta) * nb)
+            .map(|(b, nb)| b.clone() - (eta / batch_len) * nb)
             .collect();
-    }
-
-    fn evaluate(&self, test_data: &Vec<(Array1<f32>, f32)>) -> i32 {
-        let mut ret = Vec::<(f32, f32)>::with_capacity(test_data.len());
-        test_data.iter().for_each(|(x, y)| {
-            let out = max(&self.feedforward(x));
-            ret.push((out, *y))
-        });
-
-        ret.into_iter().fold(0, |mut sum, (x, y)| {
-            if (x - y).abs() < 0.1 {
-                sum += 1;
-            }
-            sum
-        })
     }
 
     fn backprop(
@@ -139,12 +124,15 @@ impl Network {
             activation = sigmoid(z);
             activations.push(activation.clone());
         }
-        let a_in = activations.pop().unwrap().clone();
+        let a_in = activations.pop().unwrap();
         let z_in = zs.pop().unwrap();
-        let mut delta = const_derivative(a_in, y.clone()) * sigmoid_prime(z_in).reversed_axes();
+        let mut delta = const_derivative(a_in, y.clone()) * sigmoid_prime(z_in);
+
         rev_nabla_b.push(delta.clone());
-        let temp = activations.pop().unwrap().clone().reversed_axes();
-        rev_nabla_w.push(matrix_from_vecs(delta.clone(), temp));
+        let temp = activations.pop().unwrap();
+        //let kn = temp.t().dot(&delta);
+        let kn = matrix_from_vecs(delta.clone(), temp);
+        rev_nabla_w.push(kn);
         let w_len = self.weights.len();
 
         for l in 2..self.num_layers {
@@ -166,10 +154,25 @@ impl Network {
             rev_nabla_w.into_iter().rev().collect(),
         )
     }
+
+    fn evaluate(&self, test_data: &Vec<(Array1<f32>, f32)>) -> i32 {
+        let mut ret = Vec::<(f32, f32)>::with_capacity(test_data.len());
+        test_data.iter().for_each(|(x, y)| {
+            let out = max(&self.feedforward(x));
+            ret.push((out, *y))
+        });
+
+        ret.into_iter().fold(0, |mut sum, (x, y)| {
+            if (x - y).abs() < 0.1 {
+                sum += 1;
+            }
+            sum
+        })
+    }
 }
 
 fn sigmoid(x: Array1<f32>) -> Array1<f32> {
-    x.map(|x: &f32| 1.0 / (1.0 + std::f64::consts::E.powf(*x as f64)) as f32)
+    x.map(|x: &f32| 1.0 / (1.0 + std::f64::consts::E.powf(-*x as f64)) as f32)
 }
 
 fn const_derivative(output: Array1<f32>, y: Array1<f32>) -> Array1<f32> {
