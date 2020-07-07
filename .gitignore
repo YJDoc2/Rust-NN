@@ -4,3 +4,4 @@ Rust-NN
 *.pyc
 __pycache__/
 Bookkeeping
+network.json

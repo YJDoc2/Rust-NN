@@ -20,7 +20,7 @@ fn cec_cost(output: Array1<f32>, y: Array1<f32>) -> f32 {
     });
     corrected.into_iter().fold(0.0, |sum, val| sum + val)
 }
-//(1.0 - eta * (lambda / n)) *
+
 fn cec_delta(_z: Array1<f32>, output: Array1<f32>, y: Array1<f32>) -> Array1<f32> {
     output - y
 }
@@ -47,7 +47,7 @@ pub fn get_qcost() -> Cost {
 }
 
 fn sigmoid(x: Array1<f32>) -> Array1<f32> {
-    x.map(|x: &f32| 1.0 / (1.0 + std::f64::consts::E.powf(*x as f64)) as f32)
+    x.map(|x: &f32| 1.0 / (1.0 + std::f64::consts::E.powf(-*x as f64)) as f32)
 }
 
 fn sigmoid_prime(x: Array1<f32>) -> Array1<f32> {
