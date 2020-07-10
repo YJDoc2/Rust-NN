@@ -7,11 +7,11 @@ use std::io::prelude::*;
 
 fn main() {
     // load all the data
-    let ((tr_data, tr_res), (val_data, val_res), (ts_data, test_res)) = util::data::load_data();
+    let ((tr_data, tr_res), (val_data, val_res), (ts_data, test_res)) = util::data_ext::load_data();
     // let mut net = NN::c1::Network::new(vec![784, 30, 10]);
-    let mut net = NN::c2::Network::new(
+    let mut net = NN::c2_mod::Network::new(
         vec![784, 30, 10],
-        NN::c2::Weight_Init::Default,
+        NN::c2_mod::Weight_Init::Default,
         util::c2::get_cec(),
     );
     // let s = std::fs::read_to_string("./network.json").unwrap();
@@ -37,14 +37,15 @@ fn main() {
         training_data,
         30,
         10,
-        0.5,
+        1.0,
         5.0,
         Some(&val_dt),
         true,
         true,
         true,
         true,
+        true,
     );
-    println!("saving....");
-    net.save();
+    //println!("saving....");
+    //net.save();
 }
