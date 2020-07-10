@@ -1,6 +1,12 @@
 pub use ndarray::{arr1, Array1, Array2, Zip};
 pub use ndarray_npy::read_npy;
 
+enum Direction{
+    Up,
+    Down,
+    Right,
+    Left,
+}
 const TEST_IMG_LOC: &str = "./data/test_data_img.npy";
 const TEST_RES_LOC: &str = "./data/test_data_res.npy";
 

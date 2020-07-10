@@ -1,45 +1,46 @@
 
 use ndarray::Array1;
 use rand::Rng;
-pub fn shift(input: &Array1<f32>,direction: i32,offset:usize) -> Array1<f32> 
+enum Direction{
+    Up,
+    Down,
+    Right,
+    Left,
+}
+pub fn shift(input: &Array1<f32>,direction: Direction,offset:usize) -> Array1<f32> 
 {
     let mut newInput = Array1::zeros(input.len());
-    if(direction==1 || direction==2)//left & right shift
-    {
 
-        for i in 0..input.len()
+    match direction{
+
+        Direction::Left =>  for i in 0..input.len()
         {
            if(i%28>=(offset))
            {
-            if(direction==1)//left shift
-            {
-                newInput[i-offset]=input[i] as f32;
-            }
-            else
-            {
-                newInput[i]=input[i-offset] as f32;//right shift
-            }              
+                newInput[i-offset]=input[i] as f32;        
            }
-        }
-    }
-    if(direction==3 || direction==4)//up & down shifts
-    {
-        let x:usize=28*offset;
-        for i in 0..784
+        },
+        Direction::Right =>  for i in 0..input.len()
         {
-           if(i>=28*offset)
+           if(i%28>=(offset))
            {
-             if(direction==3)  //up shift
-            {
-                newInput[i-x]=input[i];
-            }
-            else
-            {
-                newInput[i]=input[i-x];//down shift
-            }
+                newInput[i]=input[i-offset] as f32;   
            }
-        }
-
+        },
+        Direction::Up =>  for i in 0..input.len()
+        {
+            if(i>=28*offset)
+           {
+                newInput[i-x]=input[i] as f32;       
+           }
+        },
+        Direction::Down =>  for i in 0..input.len()
+        {
+            if(i>=28*offset)
+           {
+                newInput[i]=input[i-x] as f32;        
+           }
+        },
     }
     newInput
 }
