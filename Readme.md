@@ -5,6 +5,7 @@
 This project is contributed by : Yashodhan Joshi , Vatsal Soni, Yatharth Vyas & Tejas Ghone.
 Neural networks currently provide the best solutions to many problems in image recognition, speech recognition, and natural language processing etc. Here is an example of our effort of 
 implementing the traditional Neural Network of Recognizing handwritten digits in Rust Programming Language.
+You can read more about it from [here](http://neuralnetworksanddeeplearning.com/index.html)
 
 ## About the Neural Net
 
@@ -15,9 +16,11 @@ As we have tried to code in Rust we have used the inbuilt Rust libraries which a
 We have implemented the stochastic gradient descent method for making our model learn along with back propagation in order to get the optimum weights and biases required for predicting the given input digit.
 We reduce the quadratic cost function to gain higher accuracy and the model trains accordingly. This trained network gives us a classification rate of about 95 percent - 95.42 percent at its peak .
 Code for this version can be found in the file C1 of NN folder.
+You can read about it from [here](http://neuralnetworksanddeeplearning.com/chap1.html)
 <h4>Version 2.0</h4>
 In the first version we minimised the quadratic cost function but the problem with it is that as the sigmoid function gets smaller and smaller as it approaches 0 and thus the change in cost function wrt weights and biases reduces which in turn reduces the learning of our model. To improve the learning we use the Cross-Entropy-Cost function.It tells us that the rate at which the weight learns is controlled by by the error in the output.The larger the error, the faster the neuron will learn.Hence our  model learns faster in this case. Code for this version can be found in the file C2 of NN folder.
 This trained network gives us a classification rate of about 96-97 percent at its peak (ideal data)
+You can read about it from [here](http://neuralnetworksanddeeplearning.com/chap3.html)
 <h4>Version 2.1</h4>
 This is Version 2 with some additional updates such as saving the model and calculating the confidence with which the model predicts the given input. The confidence is calculated by
 subtracting the mean of the weights of the non-desiable output neurons from the weight of desirable output neuron.
