@@ -14,11 +14,13 @@ pub enum Weight_Init {
 
 #[derive(Serialize, Deserialize)]
 pub struct WB {
+    acc: f32,
     weights: Vec<Vec<Vec<f32>>>,
     biases: Vec<Vec<f32>>,
 }
 
 pub struct Network {
+    acc: f32,
     num_layers: usize,
     sizes: Vec<i32>,
     biases: Vec<Array1<f32>>,
@@ -60,6 +62,7 @@ impl Network {
             ),
         };
         Network {
+            acc: 0.0,
             num_layers: sizes.len(),
             sizes: sizes,
             biases: biases,
@@ -86,6 +89,7 @@ impl Network {
         eta: f32,
         lambda: f32,
         eval_data: Option<&Vec<(Array1<f32>, f32)>>,
+        auto_save: bool,
         monitor_eval_cost: bool,
         monitor_eval_acc: bool,
         monitor_train_cost: bool,
@@ -123,6 +127,14 @@ impl Network {
             if monitor_eval_acc && eval_data.is_some() {
                 let accuracy = self.eval_accuracy(eval_data.unwrap());
                 //eval_acc.push(accuracy);
+                let p_acc = accuracy as f32 / eval_data.unwrap().len() as f32;
+                if p_acc > self.acc {
+                    self.acc = p_acc;
+                    if auto_save {
+                        println!("Accuracy = {} %, saving...", p_acc * 100.0);
+                        self.save();
+                    }
+                }
                 println!(
                     "Accuracy on evaluation data : {} / {} ",
                     accuracy,
@@ -243,6 +255,7 @@ impl Network {
             })
             .collect();
         let save = WB {
+            acc: self.acc,
             weights: w_save,
             biases: b_save,
         };
@@ -334,6 +347,19 @@ fn matrix_from_vecs(v1: Array1<f32>, v2: Array1<f32>) -> Array2<f32> {
     ret
 }
 
+fn confidence(out: &Array1<f32>) -> f32 {
+    let max = max(out);
+    let mut sum = 0.0;
+    for i in 0..10 {
+        if i != max as usize {
+            sum += out[i];
+        }
+    }
+    let avg = sum / 9.0;
+
+    (out[max as usize] - avg) * 100.0
+}
+
 fn max(input: &Array1<f32>) -> f32 {
     let mut max = std::f32::MIN;
     let mut ret_idx = 0.0;
@@ -377,6 +403,7 @@ pub fn load_from_string(sizes: Vec<i32>, cost: Cost, s: String) -> Network {
         weights.push(a);
     }
     Network {
+        acc: wb.acc,
         num_layers: sizes.len(),
         sizes: sizes,
         weights: weights,
