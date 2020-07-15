@@ -23,6 +23,6 @@ Code for this version can be found in the file C1 of NN folder.
 <h4>Second Version</h4>
 In the first version we used minimised the quadratic cost function but the problem with it is that as the sigmoid function gets smaller and smaller as it approaches 0 and thus the change in cost function wrt weights and biases reduces which in turn reduces the learning of our model. To improve the learning we use the Cross-Entropy-Cost function.It tells us that the rate at which the weight learns is controlled by by the error in the output.The larger the error, the faster the neuron will learn.Hence our  model learns faster in this case. Code for this version can be found in the file C2 of NN folder.
 This trained network gives us a classification rate of about 96-97 percent at its peak (ideal data)
-<h6>Now our model works almost perfectly for ideal data which is basically centralised digit input but fails if the data is randomised . To overcome this we have added functions for adding randomization to the training data which improves its predicitbility for randomised data as well</h6>
+<h4>Now our model works almost perfectly for ideal data which is basically centralised digit input but fails if the data is randomised . To overcome this we have added functions for adding randomization to the training data which improves its predicitbility for randomised data as well</h4>
 
 
