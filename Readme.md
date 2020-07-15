@@ -1,15 +1,10 @@
-# RUST-NN
-
-# Recognize handwritten digits Neural Net
+# Recognize handwritten digits Neural Net-Using Rust
 
 ## About
 
 This project is contributed by : Yashodhan Joshi , Vatsal Soni, Yatharth Vyas & Tejas Ghone.
-
-## About Project
-
 Neural networks currently provide the best solutions to many problems in image recognition, speech recognition, and natural language processing etc. Here is an example of our effort of 
-implementing the traditional Neural Network of Recognizing handwritten digits in RUST Lang.
+implementing the traditional Neural Network of Recognizing handwritten digits in Rust Programming Language.
 
 ## About the Neural Net
 
