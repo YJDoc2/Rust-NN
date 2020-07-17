@@ -18,7 +18,7 @@ const MIN_SHIFT: usize = 3;
 const MAX_SHIFT: usize = 5; // note actual max shift is 8-1 = 7
 
 const MIN_NOISE: usize = 50;
-const MAX_NOISE: usize = 151; // note actual max noise is 251-1 = 250
+const MAX_NOISE: usize = 251; // note actual max noise is 251-1 = 250
 
 fn load_test_data() -> (Array2<f32>, Array1<i64>) {
     let img = read_npy(TEST_IMG_LOC).unwrap();
@@ -40,8 +40,8 @@ fn load_val_data() -> (Array2<f32>, Array1<i64>) {
 
 pub fn load_data() -> (
     (Vec<Array1<f32>>, Vec<Array1<f32>>),
-    (Vec<Array1<f32>>, Vec<f32>),
-    (Vec<Array1<f32>>, Vec<f32>),
+    (Vec<Array1<f32>>, Vec<Array1<f32>>),
+    (Vec<Array1<f32>>, Vec<Array1<f32>>),
 ) {
     println!("Starting loading data...");
     let train_data = load_train_data();
@@ -169,6 +169,12 @@ pub fn load_data() -> (
 
     println!("Data extending complete...");
 
+    let val_res: Vec<_> = val_res.iter().map(|x| vectorize_res(*x as usize)).collect();
+    let test_res: Vec<_> = test_res
+        .iter()
+        .map(|x| vectorize_res(*x as usize))
+        .collect();
+
     return ((tr_ret, tr_res), (val_ret, val_res), (test_ret, test_res));
 }
 
@@ -188,6 +194,19 @@ fn split_res(input: Array1<i64>) -> Vec<f32> {
     let mut ret = Vec::with_capacity(input.shape()[0]);
     for col in input.iter() {
         ret.push(*col as f32);
+    }
+    ret
+}
+
+fn vectorize_res(idx: usize) -> Array1<f32> {
+    let mut ret = Array1::zeros(10);
+    if idx > 9 {
+        panic!("array value out of bounds : {}", idx);
+    }
+    for i in 0..10 {
+        if i == idx {
+            ret[i] = 1.0;
+        }
     }
     ret
 }
